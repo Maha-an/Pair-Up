@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Pair Up Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e1e2e;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #ffffff;
+      margin-bottom: 5px;
+    }
+
+    #info {
+      color: #aaaaaa;
+      margin-bottom: 15px;
+    }
+
+    #board {
+      display: grid;
+      /* 4 tiles horizontal, 3 tiles vertical with sizes */
+      grid-template-columns: repeat(4, 120px);
+      grid-template-rows: repeat(3, 120px);
+      gap: 10px;
+    }
+
+    .tile {
+      background: #36366f;
+      border: none;
+      border-radius: 10px;
+      font-size: 40px;
+      cursor: pointer;
+      color: transparent;
+      /* hide symbol when face down */
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .tile:hover {
+      transform: scale(1.05);
+    }
+
+    .tile.flipped {
+      background: #f5f5f5;
+      color: #000000;
+    }
+
+    .tile.matched {
+      background: #4caf50;
+      color: #ffffff;
+      cursor: default;
+    }
+
+    #restart {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #ff9800;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #restart:hover {
+      background: #e68900;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Pair Up!</h1>
+  <div id="info">Moves: <span id="moves">0</span> | Pairs found: <span id="pairs">0</span>/6</div>
+
+  <div id="board"></div>
+
+  <button id="restart">Restart</button>
+
+  <script>
+    const symbols = ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉'];  // 6 symbols = 6 pairs
+    let board = document.getElementById('board');
+    let movesEl = document.getElementById('moves');
+    let pairsEl = document.getElementById('pairs');
+
+    let firstTile = null;
+    let lock = false;      // prevents clicking during flip-back animation
+    let moves = 0;
+    let pairs = 0;
+
+    function startGame() {
+      board.innerHTML = '';
+      moves = 0; pairs = 0;
+      firstTile = null; lock = false;
+      movesEl.textContent = 0;
+      pairsEl.textContent = 0;
+
+      // Create 6 pairs and shuffle
+      let deck = [...symbols, ...symbols]
+        .sort(() => Math.random() - 0.5);
+
+      deck.forEach(symbol => {
+        let tile = document.createElement('button');
+        tile.className = 'tile';
+        tile.textContent = symbol;
+        tile.dataset.symbol = symbol;
+        tile.addEventListener('click', flipTile);
+        board.appendChild(tile);
+      });
+    }
+
+    function flipTile() {
+      if (lock || this.classList.contains('flipped')) return;
+
+      this.classList.add('flipped');
+
+      if (!firstTile) {
+        firstTile = this;
+        return;
+      }
+
+      moves++;
+      movesEl.textContent = moves;
+
+      if (firstTile.dataset.symbol === this.dataset.symbol) {
+        // It's a match!
+        firstTile.classList.add('matched');
+        this.classList.add('matched');
+        firstTile = null;
+        pairs++;
+        pairsEl.textContent = pairs;
+
+        if (pairs === 6) {
+          setTimeout(() => alert(`You won in ${moves} moves! 🎉`), 300);
+        }
+      } else {
+        // No match — flip both back after a short delay
+        lock = true;
+        let a = firstTile, b = this;
+        firstTile = null;
+        setTimeout(() => {
+          a.classList.remove('flipped');
+          b.classList.remove('flipped');
+          lock = false;
+        }, 700);
+      }
+    }
+
+    document.getElementById('restart').addEventListener('click', startGame);
+
+    startGame();
+  </script>
+
+</body>
+
+</html>
