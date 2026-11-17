@@ -5,11 +5,13 @@
   <meta charset="UTF-8">
   <title>Pair Up Game</title>
   <style>
+    /* Reset box sizing and set a clean default font for all elements */
     * {
       box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
 
+    /* Center the game vertically and horizontally on a dark background */
     body {
       display: flex;
       flex-direction: column;
@@ -20,50 +22,56 @@
       padding: 20px;
     }
 
+    /* Main game title styling */
     h1 {
       color: #ffffff;
       margin-bottom: 5px;
     }
 
+    /* Scoreboard text (moves and pairs found) */
     #info {
       color: #aaaaaa;
       margin-bottom: 15px;
     }
 
+    /* Game board grid layout: 4 columns by 3 rows (12 tiles total) */
     #board {
       display: grid;
-      /* 4 tiles horizontal, 3 tiles vertical with sizes */
       grid-template-columns: repeat(4, 120px);
       grid-template-rows: repeat(3, 120px);
       gap: 10px;
     }
 
+    /* Default face-down tile styling */
     .tile {
       background: #36366f;
       border: none;
       border-radius: 10px;
       font-size: 40px;
       cursor: pointer;
-      color: transparent;
-      /* hide symbol when face down */
+      color: transparent; /* Hide the emoji symbol while face down */
       transition: background 0.3s, transform 0.2s;
     }
 
+    /* Slight zoom effect when hovering over a tile */
     .tile:hover {
       transform: scale(1.05);
     }
 
+    /* Face-up tile state revealing the symbol */
     .tile.flipped {
       background: #f5f5f5;
       color: #000000;
     }
 
+    /* Matched pair state highlighted in green */
     .tile.matched {
       background: #4caf50;
       color: #ffffff;
       cursor: default;
     }
 
+    /* Restart button styling */
     #restart {
       margin-top: 20px;
       padding: 10px 20px;
@@ -75,6 +83,7 @@
       cursor: pointer;
     }
 
+    /* Darker orange shade on restart button hover */
     #restart:hover {
       background: #e68900;
     }
@@ -83,71 +92,90 @@
 
 <body>
 
+  <!-- Game Header & Score Tracker -->
   <h1>Pair Up!</h1>
   <div id="info">Moves: <span id="moves">0</span> | Pairs found: <span id="pairs">0</span>/6</div>
 
+  <!-- Container where JavaScript dynamically generates the 12 tiles -->
   <div id="board"></div>
 
+  <!-- Button to reset and reshuffle the game -->
   <button id="restart">Restart</button>
 
   <script>
-    const symbols = ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉'];  // 6 symbols = 6 pairs
+    // Array of 6 unique fruit emojis (duplicated later to create 6 matching pairs)
+    const symbols = ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉'];
+
+    // Cache DOM elements for quick access
     let board = document.getElementById('board');
     let movesEl = document.getElementById('moves');
     let pairsEl = document.getElementById('pairs');
 
-    let firstTile = null;
-    let lock = false;      // prevents clicking during flip-back animation
-    let moves = 0;
-    let pairs = 0;
+    // Game state variables
+    let firstTile = null; // Stores the first clicked tile of a turn
+    let lock = false;      // Prevents clicking additional tiles during flip-back delay
+    let moves = 0;         // Tracks total pair attempts
+    let pairs = 0;         // Tracks total matched pairs found
 
+    // Initializes or resets the game board and state
     function startGame() {
+      // Clear existing tiles and reset counters/flags
       board.innerHTML = '';
-      moves = 0; pairs = 0;
-      firstTile = null; lock = false;
+      moves = 0;
+      pairs = 0;
+      firstTile = null;
+      lock = false;
       movesEl.textContent = 0;
       pairsEl.textContent = 0;
 
-      // Create 6 pairs and shuffle
+      // Duplicate the symbols array to make pairs, then shuffle randomly
       let deck = [...symbols, ...symbols]
         .sort(() => Math.random() - 0.5);
 
+      // Create a button element for each symbol and add it to the board
       deck.forEach(symbol => {
         let tile = document.createElement('button');
         tile.className = 'tile';
         tile.textContent = symbol;
-        tile.dataset.symbol = symbol;
+        tile.dataset.symbol = symbol; // Store symbol in a data attribute for easy matching
         tile.addEventListener('click', flipTile);
         board.appendChild(tile);
       });
     }
 
+    // Handles tile clicks and match-checking logic
     function flipTile() {
+      // Ignore clicks if the board is locked or the tile is already face-up
       if (lock || this.classList.contains('flipped')) return;
 
+      // Reveal the clicked tile
       this.classList.add('flipped');
 
+      // If this is the first tile flipped in the turn, save it and wait for the second
       if (!firstTile) {
         firstTile = this;
         return;
       }
 
+      // Increment and display the move counter once two tiles are flipped
       moves++;
       movesEl.textContent = moves;
 
+      // Check if the two flipped tiles have matching symbols
       if (firstTile.dataset.symbol === this.dataset.symbol) {
-        // It's a match!
+        // Match found: mark both tiles as matched and update pair count
         firstTile.classList.add('matched');
         this.classList.add('matched');
         firstTile = null;
         pairs++;
         pairsEl.textContent = pairs;
 
+        // Check win condition (all 6 pairs found)
         if (pairs === 6) {
           setTimeout(() => alert(`You won in ${moves} moves! 🎉`), 300);
         }
       } else {
-        // No match — flip both back after a short delay
+        // No match: lock the board and flip both tiles back face-down after 700ms
         lock = true;
         let a = firstTile, b = this;
         firstTile = null;
@@ -159,8 +187,10 @@
       }
     }
 
+    // Attach click event listener to the Restart button
     document.getElementById('restart').addEventListener('click', startGame);
 
+    // Start the game automatically when the page loads
     startGame();
   </script>
 
